@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+  <body>
+    <h2>Calculator</h2>
+
+    <form action="/calc" method="post">
+      <input name="a" placeholder="First number" />
+      <input name="b" placeholder="Second number" />
+
+      <select name="op">
+        <option value="add">+</option>
+        <option value="sub">-</option>
+        <option value="mul">*</option>
+        <option value="div">/</option>
+      </select>
+
+      <button type="submit">Calculate</button>
+    </form>
+
+    {% if r %}
+    <h3>Result : {{r.result}}</h3>
+    {% endif %}
+  </body>
+</html>
+
+
