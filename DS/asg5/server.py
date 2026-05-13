@@ -4,61 +4,60 @@ TOKEN="TOKEN"
 PORT=8080
 BUFFER_SIZE=1024
 
-class TokenRingServer:
-    def __init__(self):
-        self.server_socket=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        self.clients=[]
-        self.running=True
+clients=[]
+server_socket=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
-    def start(self):
-        self.server_socket.bind(("localhost",PORT))
-        self.server_socket.listen()
 
-        print("Server Started")
+def start_server():
 
-        while self.running:
-            client_socket,addr=self.server_socket.accept()
+    server_socket.bind(("localhost",PORT))
+    server_socket.listen()
+    print("Server Started")
 
-            name=f"Client-{len(self.clients)+1}"
-            self.clients.append((client_socket,name))
+    while True:
 
-            print(f"{name} connected")
+        client_socket,addr=server_socket.accept()
+        name=f"Client-{len(clients)+1}"
+        clients.append((client_socket,name))
+        print(f"{name} connected")
 
-            if len(self.clients)==1:
-                print(f"Sending token to {name}")
-                client_socket.send(TOKEN.encode())
+        if len(clients)==1:
+            print(f"Sending token to {name}")
+            client_socket.send(TOKEN.encode())
 
-            threading.Thread(
-                target=self.handle_client,
-                args=(client_socket,name)
-            ).start()
+        threading.Thread(
+            target=handle_client,
+            args=(client_socket,name)
+        ).start()
 
-    def handle_client(self,client_socket,name):
-        while self.running:
-            try:
-                data=client_socket.recv(BUFFER_SIZE).decode()
+def handle_client(client_socket,name):
+    global clients
 
-                if not data:
-                    raise Exception()
+    while True:
+        try:
+            data=client_socket.recv(BUFFER_SIZE).decode()
 
-                i=[c[0] for c in self.clients].index(client_socket)
+            if not data:
+                raise Exception()
 
-                next_client,next_name=self.clients[
-                    (i+1)%len(self.clients)
-                ]
+            i=[c[0] for c in clients].index(client_socket)
 
-                if data=="TOKEN":
-                    print(f"Sending token to {next_name}")
-                    next_client.send(TOKEN.encode())
+            next_client,next_name=clients[
+                (i+1)%len(clients)
+            ]
 
-            except:
-                print(f"{name} disconnected")
+            if data=="TOKEN":
+                print(f"Sending token to {next_name}")
 
-                if (client_socket,name) in self.clients:
-                    self.clients.remove((client_socket,name))
+                next_client.send(TOKEN.encode())
 
-                client_socket.close()
-                break
+        except:
+            print(f"{name} disconnected")
 
-if __name__=="__main__":
-    TokenRingServer().start()
+            if (client_socket,name) in clients:
+                clients.remove((client_socket,name))
+
+            client_socket.close()
+            break
+
+start_server()
