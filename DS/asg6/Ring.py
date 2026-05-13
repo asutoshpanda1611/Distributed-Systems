@@ -1,79 +1,79 @@
-num_process=5
-active_processes=set(range(1,num_process+1))
-coordinator=num_process
+n=5
+active=set(range(1,n+1))
+coord=n
 
-def election(process_id):
-    global coordinator
+def election(pid):
+    global coord
 
-    if process_id not in active_processes:
-        print(f"Process {process_id} is not active")
+    if pid not in active:
+        print(f"Process {pid} is not active")
         return
 
-    print(f"\nProcess {process_id} starts election")
+    print(f"\nProcess {pid} starts election")
 
-    current=process_id
-    next_process=(current%num_process)+1
-    highest_id=process_id
+    curr=pid
+    nxt=(curr%n)+1
+    high=pid
 
-    while next_process!=process_id:
+    while nxt!=pid:
 
-        if next_process in active_processes:
+        if nxt in active:
 
-            print(f"Process {current} passes message to Process {next_process}")
+            print(f"Process {curr} passes message to Process {nxt}")
 
-            if next_process>highest_id:
-                highest_id=next_process
+            if nxt>high:
+                high=nxt
 
-            current=next_process
+            curr=nxt
 
         else:
-            print(f"Process {next_process} is DOWN")
+            print(f"Process {nxt} is DOWN")
 
-        next_process=(next_process%num_process)+1
+        nxt=(nxt%n)+1
 
-    coordinator=highest_id
-    print(f"\nProcess {coordinator} becomes COORDINATOR")
+    coord=high
+    print(f"\nProcess {coord} becomes COORDINATOR")
 
-def bring_up_process(process_id):
+def up(pid):
 
-    if process_id in active_processes:
-        print(f"Process {process_id} already UP")
-
-    else:
-        active_processes.add(process_id)
-        print(f"Process {process_id} is now UP")
-
-def bring_down_process(process_id):
-    global coordinator
-
-    if process_id not in active_processes:
-        print(f"Process {process_id} already DOWN")
+    if pid in active:
+        print(f"Process {pid} already UP")
 
     else:
-        active_processes.remove(process_id)
-        print(f"Process {process_id} is now DOWN")
+        active.add(pid)
+        print(f"Process {pid} is now UP")
 
-        if coordinator==process_id:
+def down(pid):
+    global coord
+
+    if pid not in active:
+        print(f"Process {pid} already DOWN")
+
+    else:
+        active.remove(pid)
+        print(f"Process {pid} is now DOWN")
+
+        if coord==pid:
             print("Coordinator failed! Starting election...")
 
-            if active_processes:
-                starter=min(active_processes)
-                election(starter)
+            if active:
+                start=min(active)
+                election(start)
 
             else:
-                coordinator=None
+                coord=None
                 print("No active processes remaining")
 
-def print_active_processes():
-
+def print_active():
     print("\nActive Processes:")
-    for process_id in sorted(active_processes):
-        print(f"Process {process_id}")
 
-def print_coordinator():
+    for pid in sorted(active):
+        print(f"Process {pid}")
 
-    if coordinator:
-        print(f"\nCoordinator: Process {coordinator}")
+def print_coord():
+
+    if coord:
+        print(f"\nCoordinator: Process {coord}")
 
     else:
         print("\nNo coordinator present")
@@ -88,28 +88,25 @@ while True:
     print("5) Print Coordinator")
     print("6) Exit")
 
-    choice=int(input("Enter choice: "))
+    ch=int(input("Enter choice: "))
 
-    if choice==1:
+    if ch==1:
+        pid=int(input("Enter process id: "))
+        election(pid)
 
-        process_id=int(input("Enter process id: "))
-        election(process_id)
+    elif ch==2:
+        pid=int(input("Enter process id: "))
+        up(pid)
 
-    elif choice==2:
+    elif ch==3:
+        pid=int(input("Enter process id: "))
+        down(pid)
 
-        process_id=int(input("Enter process id: "))
-        bring_up_process(process_id)
+    elif ch==4:
+        print_active()
 
-    elif choice==3:
+    elif ch==5:
+        print_coord()
 
-        process_id=int(input("Enter process id: "))
-        bring_down_process(process_id)
-
-    elif choice==4:
-        print_active_processes()
-
-    elif choice==5:
-        print_coordinator()
-
-    elif choice==6:
+    elif ch==6:
         break
