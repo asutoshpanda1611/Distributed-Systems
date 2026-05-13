@@ -1,110 +1,91 @@
 import random
 
-class Bully:
+num_process=5
+state=[True]*num_process
+leader=num_process
 
-    def __init__(self, num_process=5):
-        self.num_process = num_process
-        self.state = [True] * num_process
-        self.leader = num_process
+def election(process_id):
+    global leader
+    print(f"\nProcess {process_id} starts election")
+    coordinator=process_id
 
-    def election(self, process_id):
+    for i in range(process_id+1,num_process+1):
+        if state[i-1]:
+            print(f"Process {process_id} sends ELECTION to Process {i}")
+            print(f"Process {i} replies OK")
+            coordinator=i
 
-        print(f"\nProcess {process_id} starts election")
+    print(f"Process {coordinator} sends COORDINATOR message")
+    leader=coordinator
+    print(f"Process {leader} is now coordinator")
 
-        coordinator = process_id
+def up(process_id):
+    if state[process_id-1]:
+        print(f"Process {process_id} already UP")
 
-        for i in range(process_id + 1, self.num_process + 1):
+    else:
+        state[process_id-1]=True
+        print(f"Process {process_id} is now UP")
+        election(process_id)
 
-            if self.state[i - 1]:
-                print(f"Process {process_id} sends ELECTION to Process {i}")
-                print(f"Process {i} replies OK")
-                coordinator = i
+def down(process_id):
+    global leader
+    if not state[process_id-1]:
+        print(f"Process {process_id} already DOWN")
 
-        print(f"Process {coordinator} sends COORDINATOR message")
-        self.leader = coordinator
+    else:
+        state[process_id-1]=False
+        print(f"Process {process_id} is now DOWN")
 
-        print(f"Process {self.leader} is now coordinator")
+        if leader==process_id:
+            print("Coordinator failed! Starting election...")
+            active=[i+1 for i,s in enumerate(state) if s]
 
-    def up(self, process_id):
+            if active:
+                election(random.choice(active))
 
-        if self.state[process_id - 1]:
-            print(f"Process {process_id} already UP")
+            else:
+                leader=None
+                print("No active processes remaining")
 
-        else:
-            self.state[process_id - 1] = True
-            print(f"Process {process_id} is now UP")
+def message(process_id):
+    if not state[process_id-1]:
+        print(f"Process {process_id} is DOWN")
+        return
 
-            self.election(process_id)
+    print(f"\nProcess {process_id} sends message")
 
-    def down(self, process_id):
+    if leader and state[leader-1]:
+        print(f"Coordinator {leader} is alive -> OK")
 
-        if not self.state[process_id - 1]:
-            print(f"Process {process_id} already DOWN")
+    else:
+        print("Coordinator not responding")
+        election(process_id)
 
-        else:
-            self.state[process_id - 1] = False
-            print(f"Process {process_id} is now DOWN")
+print("Processes UP: p1 p2 p3 p4 p5")
+print(f"Initial Coordinator: Process {leader}")
 
-            if self.leader == process_id:
+while True:
 
-                print("Coordinator failed! Starting election...")
+    print("\n----------------------")
+    print("1) UP a process")
+    print("2) DOWN a process")
+    print("3) Send Message")
+    print("4) Exit")
 
-                active = [i + 1 for i, s in enumerate(self.state) if s]
+    choice=int(input("Enter choice: "))
 
-                if active:
-                    self.election(random.choice(active))
+    if choice==1:
+        pid=int(input("Enter process id: "))
+        up(pid)
 
-                else:
-                    self.leader = None
-                    print("No active processes remaining")
+    elif choice==2:
+        pid=int(input("Enter process id: "))
+        down(pid)
 
-    def message(self, process_id):
+    elif choice==3:
+        pid=int(input("Enter process id: "))
+        message(pid)
 
-        if not self.state[process_id - 1]:
-            print(f"Process {process_id} is DOWN")
-            return
-
-        print(f"\nProcess {process_id} sends message")
-
-        if self.leader and self.state[self.leader - 1]:
-            print(f"Coordinator {self.leader} is alive -> OK")
-
-        else:
-            print("Coordinator not responding")
-            self.election(process_id)
-
-
-if __name__ == "__main__":
-
-    bully = Bully()
-
-    print("Processes UP: p1 p2 p3 p4 p5")
-    print(f"Initial Coordinator: Process {bully.leader}")
-
-    while True:
-
-        print("\n----------------------")
-        print("1) UP a process")
-        print("2) DOWN a process")
-        print("3) Send Message")
-        print("4) Exit")
-
-        choice = int(input("Enter choice: "))
-
-        if choice == 1:
-
-            pid = int(input("Enter process id: "))
-            bully.up(pid)
-
-        elif choice == 2:
-
-            pid = int(input("Enter process id: "))
-            bully.down(pid)
-
-        elif choice == 3:
-
-            pid = int(input("Enter process id: "))
-            bully.message(pid)
-
-        elif choice == 4:
-            break
+    elif choice==4:
+        break
