@@ -1,64 +1,63 @@
 n=5
-active=set(range(1,n+1))
+state=[True]*n
 coord=n
 
 def election(pid):
     global coord
 
-    if pid not in active:
+    if not state[pid-1]:
         print(f"Process {pid} is not active")
         return
 
     print(f"\nProcess {pid} starts election")
 
     curr=pid
-    nxt=(curr%n)+1
-    high=pid
+    next_process=(curr%n)+1
+    coord_id=pid
 
-    while nxt!=pid:
+    while next_process!=pid:
+        if state[next_process-1]:
+            print(f"Process {curr} passes ELECTION to Process {next_process}")
 
-        if nxt in active:
+            if next_process>coord_id:
+                coord_id=next_process
 
-            print(f"Process {curr} passes message to Process {nxt}")
-
-            if nxt>high:
-                high=nxt
-
-            curr=nxt
+            curr=next_process
 
         else:
-            print(f"Process {nxt} is DOWN")
+            print(f"Process {next_process} is DOWN")
 
-        nxt=(nxt%n)+1
+        next_process=(next_process%n)+1
 
-    coord=high
-    print(f"\nProcess {coord} becomes COORDINATOR")
+    print(f"\nProcess {coord_id} sends COORDINATOR message")
+
+    coord=coord_id
+    print(f"Process {coord} is now coordinator")
 
 def up(pid):
-
-    if pid in active:
+    if state[pid-1]:
         print(f"Process {pid} already UP")
 
     else:
-        active.add(pid)
+        state[pid-1]=True
         print(f"Process {pid} is now UP")
 
 def down(pid):
     global coord
 
-    if pid not in active:
+    if not state[pid-1]:
         print(f"Process {pid} already DOWN")
 
     else:
-        active.remove(pid)
+        state[pid-1]=False
         print(f"Process {pid} is now DOWN")
 
         if coord==pid:
             print("Coordinator failed! Starting election...")
+            active=[i+1 for i,s in enumerate(state) if s]
 
             if active:
-                start=min(active)
-                election(start)
+                election(active[0])
 
             else:
                 coord=None
@@ -66,13 +65,12 @@ def down(pid):
 
 def print_active():
     print("\nActive Processes:")
-
-    for pid in sorted(active):
-        print(f"Process {pid}")
+    for i,s in enumerate(state):
+        if s:
+            print(f"Process {i+1}")
 
 def print_coord():
-
-    if coord:
+    if coord and state[coord-1]:
         print(f"\nCoordinator: Process {coord}")
 
     else:
@@ -80,10 +78,10 @@ def print_coord():
 
 while True:
 
-    print("\n-----------------------------")
+    print("\n----------------------")
     print("1) Start Election")
-    print("2) Bring Up Process")
-    print("3) Bring Down Process")
+    print("2) UP a process")
+    print("3) DOWN a process")
     print("4) Print Active Processes")
     print("5) Print Coordinator")
     print("6) Exit")
