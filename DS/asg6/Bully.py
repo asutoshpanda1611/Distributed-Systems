@@ -1,43 +1,43 @@
 import random
 
-num_process=5
-state=[True]*num_process
-leader=num_process
+n=5
+state=[True]*n
+coord=n
 
-def election(process_id):
-    global leader
-    print(f"\nProcess {process_id} starts election")
-    coordinator=process_id
+def election(pid):
+    global coord
+    print(f"\nProcess {pid} starts election")
+    coord_id=pid
 
-    for i in range(process_id+1,num_process+1):
+    for i in range(pid+1,n+1):
         if state[i-1]:
-            print(f"Process {process_id} sends ELECTION to Process {i}")
+            print(f"Process {pid} sends ELECTION to Process {i}")
             print(f"Process {i} replies OK")
-            coordinator=i
+            coord_id=i
 
-    print(f"Process {coordinator} sends COORDINATOR message")
-    leader=coordinator
-    print(f"Process {leader} is now coordinator")
+    print(f"Process {coord_id} sends COORDINATOR message")
+    coord=coord_id
+    print(f"Process {coord} is now coordinator")
 
-def up(process_id):
-    if state[process_id-1]:
-        print(f"Process {process_id} already UP")
-
-    else:
-        state[process_id-1]=True
-        print(f"Process {process_id} is now UP")
-        election(process_id)
-
-def down(process_id):
-    global leader
-    if not state[process_id-1]:
-        print(f"Process {process_id} already DOWN")
+def up(pid):
+    if state[pid-1]:
+        print(f"Process {pid} already UP")
 
     else:
-        state[process_id-1]=False
-        print(f"Process {process_id} is now DOWN")
+        state[pid-1]=True
+        print(f"Process {pid} is now UP")
+        election(pid)
 
-        if leader==process_id:
+def down(pid):
+    global coord
+    if not state[pid-1]:
+        print(f"Process {pid} already DOWN")
+
+    else:
+        state[pid-1]=False
+        print(f"Process {pid} is now DOWN")
+
+        if coord==pid:
             print("Coordinator failed! Starting election...")
             active=[i+1 for i,s in enumerate(state) if s]
 
@@ -45,25 +45,25 @@ def down(process_id):
                 election(random.choice(active))
 
             else:
-                leader=None
+                coord=None
                 print("No active processes remaining")
 
-def message(process_id):
-    if not state[process_id-1]:
-        print(f"Process {process_id} is DOWN")
+def msg(pid):
+    if not state[pid-1]:
+        print(f"Process {pid} is DOWN")
         return
 
-    print(f"\nProcess {process_id} sends message")
+    print(f"\nProcess {pid} sends message")
 
-    if leader and state[leader-1]:
-        print(f"Coordinator {leader} is alive -> OK")
+    if coord and state[coord-1]:
+        print(f"Coordinator {coord} is alive -> OK")
 
     else:
         print("Coordinator not responding")
-        election(process_id)
+        election(pid)
 
 print("Processes UP: p1 p2 p3 p4 p5")
-print(f"Initial Coordinator: Process {leader}")
+print(f"Initial Coordinator: Process {coord}")
 
 while True:
 
@@ -73,19 +73,19 @@ while True:
     print("3) Send Message")
     print("4) Exit")
 
-    choice=int(input("Enter choice: "))
+    ch=int(input("Enter choice: "))
 
-    if choice==1:
+    if ch==1:
         pid=int(input("Enter process id: "))
         up(pid)
 
-    elif choice==2:
+    elif ch==2:
         pid=int(input("Enter process id: "))
         down(pid)
 
-    elif choice==3:
+    elif ch==3:
         pid=int(input("Enter process id: "))
-        message(pid)
+        msg(pid)
 
-    elif choice==4:
+    elif ch==4:
         break
