@@ -6,16 +6,21 @@ coord=n
 
 def election(pid):
     global coord
+
+    if not state[pid-1]:
+        print(f"Process {pid} is DOWN")
+        return
+
     print(f"\nProcess {pid} starts election")
     coord_id=pid
-
+    
     for i in range(pid+1,n+1):
         if state[i-1]:
             print(f"Process {pid} sends ELECTION to Process {i}")
             print(f"Process {i} replies OK")
             coord_id=i
 
-    print(f"Process {coord_id} sends COORDINATOR message")
+    print(f"\nProcess {coord_id} sends COORDINATOR message")
     coord=coord_id
     print(f"Process {coord} is now coordinator")
 
@@ -26,10 +31,12 @@ def up(pid):
     else:
         state[pid-1]=True
         print(f"Process {pid} is now UP")
+
         election(pid)
 
 def down(pid):
     global coord
+
     if not state[pid-1]:
         print(f"Process {pid} already DOWN")
 
@@ -48,19 +55,18 @@ def down(pid):
                 coord=None
                 print("No active processes remaining")
 
-def msg(pid):
-    if not state[pid-1]:
-        print(f"Process {pid} is DOWN")
-        return
+def print_active():
+    for i,s in enumerate(state):
 
-    print(f"\nProcess {pid} sends message")
+        if s:
+            print(f"Process {i+1}")
 
+def print_coord():
     if coord and state[coord-1]:
-        print(f"Coordinator {coord} is alive -> OK")
+        print(f"\nCoordinator: Process {coord}")
 
     else:
-        print("Coordinator not responding")
-        election(pid)
+        print("\nNo coordinator present")
 
 print("Processes UP: p1 p2 p3 p4 p5")
 print(f"Initial Coordinator: Process {coord}")
@@ -70,8 +76,10 @@ while True:
     print("\n----------------------")
     print("1) UP a process")
     print("2) DOWN a process")
-    print("3) Send Message")
-    print("4) Exit")
+    print("3) Show Active Processes")
+    print("4) Show Coordinator")
+    print("5) Start Election")
+    print("6) Exit")
 
     ch=int(input("Enter choice: "))
 
@@ -84,8 +92,14 @@ while True:
         down(pid)
 
     elif ch==3:
-        pid=int(input("Enter process id: "))
-        msg(pid)
+        print_active()
 
     elif ch==4:
+        print_coord()
+
+    elif ch==5:
+        pid=int(input("Enter process id: "))
+        election(pid)
+
+    elif ch==6:
         break
